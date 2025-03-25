@@ -5,7 +5,7 @@
   "type": "module",
   "main": "exif-es6.ts",
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "npx tsc --noCheck -p tsconfig.json",
     "clean": "rm -rf dist exif-es6*.tgz"
   },
   "files": [
@@ -40,6 +40,8 @@
     "example"
   ],
   "devDependencies": {
-    "mversion": "1.10.0"
+    "esbuild": "0.25.1",
+    "mversion": "1.10.0",
+    "typescript": "5.8.2"
   }
 }

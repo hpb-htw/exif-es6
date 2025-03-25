@@ -6,8 +6,17 @@
 </head>
 <body>
 
-<img id="demo1" src="Bloated-Hero.jpg" alt="">
+<div>
+    <h3>normal image from img-element</h3>
+<img id="demo1" src="Bloated-Hero.jpg" width="400px" alt="">
+</div>
 
-<script src="demo.js" type="module"></script>
+<div>
+    <h3>image from user upload (objectURL)</h3>
+    <input type="file" id="fileElem" accept="image/*" style="display:none" />
+    <a class="button-like" href="#" id="fileSelect">upload an image</a>
+</div>
+
+<script src="./demo.js" type="module"></script>
 </body>
 </html>

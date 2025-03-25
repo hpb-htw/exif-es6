@@ -31,10 +31,10 @@ Start with calling the `EXIF.getData` function. You pass it an image as a parame
 ```javascript
 window.addEventListener("load", async () => {
     const image = document.getElementById("image.jpeg");
-    const imageData = await EXIF.getData(image);
-    console.log(imageData.exifdata);
-    const make = EXIF.getTag(imageData, "Make");
-    const model = EXIF.getTag(imageData, "Model");
+    const imageTags = await EXIF.getData(image);
+    console.log(imageTags.exifdata);
+    const make = EXIF.getTag(imageTags, "Make");
+    const model = EXIF.getTag(imageTags, "Model");
     console.log({make, model});
 });
 ```
