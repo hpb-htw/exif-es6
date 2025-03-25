@@ -3,7 +3,7 @@
 import * as esbuild from 'esbuild'
 
 const result = await esbuild.context({
-    entryPoints: ['./exif-es6.ts'],
+    entryPoints: ['./lib/exif-es6.ts'],
     outdir: './dist',
     allowOverwrite: true,
     bundle: true,

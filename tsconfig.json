@@ -7,7 +7,7 @@
         "declaration": true,
         "sourceMap": true,
         "declarationMap": true,
-        "rootDir": "./",
+        "rootDir": "./lib",
         "outDir": "dist"
     }
 }

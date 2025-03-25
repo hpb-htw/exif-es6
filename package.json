@@ -6,11 +6,11 @@
   "main": "exif-es6.ts",
   "scripts": {
     "build": "npx tsc --noCheck -p tsconfig.json",
-    "clean": "rm -rf dist exif-es6*.tgz"
+    "clean": "rm -rfv dist exif-es6*.tgz"
   },
   "files": [
     "dist",
-    "*.ts"
+    "lib"
   ],
   "directories": {
     "example": "demo"

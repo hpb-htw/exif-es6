@@ -1,4 +1,4 @@
-import {findEXIFinJPEG, findIPTCinJPEG, findXMPinJPEG} from "./binary-seeker";
+import {findEXIFinJPEG, findIPTCinJPEG, findXMPinJPEG} from "./byte-seeker.js";
 
 interface ImageInfo {
     exifdata:Object,
