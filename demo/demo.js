@@ -1,4 +1,4 @@
-import {EXIF, fetchImageData} from "../dist/exif-es6.js";
+import {EXIF} from "../dist/exif-es6.js";
 
 function initTestUploadFile() {
     const fileSelect = document.getElementById("fileSelect");
@@ -52,7 +52,7 @@ async function testObjectUrl() {
     const testImage = new Image();
     testImage.src = objectUrl;
     testImage.addEventListener("load", async () => {
-        const imageData = await EXIF.getData(testImage);
+        await EXIF.getData(testImage);
         console.log("testObjectUrl", EXIF.getAllTags(testImage) );
         document.getElementById("demo3-exif").textContent = EXIF.pretty(testImage);
     });

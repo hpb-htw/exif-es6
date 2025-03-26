@@ -355,7 +355,7 @@ export function findIPTCinJPEG(file:ArrayBuffer):LiteralMap|boolean|undefined {
         return false; // not a valid jpeg
     }
 
-    const isFieldSegmentStart = (dataView:DataView<any>, offset:number) => {
+    const isFieldSegmentStart = (dataView:DataView, offset:number) => {
         return (
             dataView.getUint8(offset) === 0x38 &&
             dataView.getUint8(offset+1) === 0x42 &&
@@ -457,7 +457,7 @@ function readTags(file:DataView<any>, tiffStart:number, dirStart:number, strings
 }
 
 
-function readTagValue(file:DataView<any>, entryOffset:number, tiffStart:number, dirStart:number, bigEnd:boolean) {
+function readTagValue(file:DataView, entryOffset:number, tiffStart:number, dirStart:number, bigEnd:boolean) {
     const type = file.getUint16(entryOffset+2, !bigEnd)
         ,numValues = file.getUint32(entryOffset+4, !bigEnd)
         ,valueOffset = file.getUint32(entryOffset+8, !bigEnd) + tiffStart;
@@ -551,7 +551,7 @@ function readTagValue(file:DataView<any>, entryOffset:number, tiffStart:number, 
  * Given an IFD (Image File Directory) start offset
  * returns an offset to next IFD or 0 if it's the last IFD.
  */
-function getNextIFDOffset(dataView:DataView<any>, dirStart:number, bigEnd:boolean){
+function getNextIFDOffset(dataView:DataView, dirStart:number, bigEnd:boolean){
     //the first 2bytes means the number of directory entries contains in this IFD
     var entries = dataView.getUint16(dirStart, !bigEnd);
 
@@ -562,7 +562,7 @@ function getNextIFDOffset(dataView:DataView<any>, dirStart:number, bigEnd:boolea
     return dataView.getUint32(dirStart + 2 + entries * 12, !bigEnd); // each entry is 12 bytes long
 }
 
-function readThumbnailImage(dataView:DataView<any>, tiffStart:number, firstIFDOffset:number, bigEnd:boolean):LiteralMap {
+function readThumbnailImage(dataView:DataView, tiffStart:number, firstIFDOffset:number, bigEnd:boolean):LiteralMap {
 
     // get the IFD1 offset
     const IFD1OffsetPointer = getNextIFDOffset(dataView, tiffStart+firstIFDOffset, bigEnd);
@@ -616,7 +616,7 @@ function readThumbnailImage(dataView:DataView<any>, tiffStart:number, firstIFDOf
     return thumbTags;
 }
 
-function getStringFromDB(buffer:DataView<any>, start:number, length:number) {
+function getStringFromDB(buffer:DataView, start:number, length:number) {
     let outstr = "";
     for (let n = start; n < start+length; n++) {
         outstr += String.fromCharCode(buffer.getUint8(n));
@@ -628,7 +628,7 @@ function getStringFromDB(buffer:DataView<any>, start:number, length:number) {
  * TODO: remove return bool and throw all Invalid argument
  * TODO: remove unused parameter
  * */
-function readEXIFData(file:DataView<any>, start:number, end:number):LiteralMap|boolean {
+function readEXIFData(file:DataView, start:number, end:number):LiteralMap|boolean {
 
     if (getStringFromDB(file, start, 4) != "Exif") {
         if (debug) console.log("Not valid EXIF data! " + getStringFromDB(file, start, 4));

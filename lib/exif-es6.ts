@@ -6,7 +6,6 @@ function imageHasData(img:ImageData):boolean {
 }
 
 function base64ToArrayBuffer(base64:string, contentType:string=''):ArrayBuffer {
-    //contentType = contentType || base64.match(/^data\:([^\;]+)\;base64,/mi)[1] || ''; // e.g. 'data:image/jpeg;base64,...' => 'image/jpeg'
     base64 = base64.replace(/^data\:([^\;]+)\;base64,/gmi, '');
     const binary = atob(base64);
     const len = binary.length;
@@ -35,65 +34,71 @@ export async function fetchImageData(img:ImageData):Promise<ImageInfo> {
     if(img.src) {
         if (/^data\:/i.test(img.src)) { // Data URI
             const arrayBuffer = base64ToArrayBuffer(img.src);
-            return new Promise<ImageInfo>((resolve) => {
-                const imageInfo = findInfoFromBinary(arrayBuffer);
-                resolve(Object.assign(img, imageInfo));
-            });
+            const imageInfo = findInfoFromBinary(arrayBuffer);
+            return Promise.resolve(Object.assign(img, imageInfo));
         } else if (/^blob\:/i.test(img.src)) { // Object URL
-
             const blob = await fetchURLToBlob(img.src);
-            return readBlob(blob);
+            const imgInfo = await readBlob(blob);
+            return Promise.resolve(Object.assign(img, imgInfo));
         } else { // common HTTP(S)
             const response = await fetch(img.src, {
                 method: 'GET'
             });
             const blob = await response.blob();
-            return readBlob(blob);
+            const imgInfo = await readBlob(blob);
+            return Promise.resolve(Object.assign(img, imgInfo));
         }
     } else if(img instanceof Blob || img instanceof File) {
-        return readBlob(img);
+        const imgInfo = await readBlob(img);
+        return Promise.resolve(Object.assign(img, imgInfo));
     } else {
         throw new TypeError(`Argument ${img} is not an image.`);
     }
-    function readBlob(blob:Blob|File) : Promise<ImageInfo> {
-        return new Promise<ImageInfo>((resolve) => {
-            const reader = new FileReader();
-            reader.readAsArrayBuffer(blob);
-            reader.addEventListener('load', (event)=> {
-                // @ts-ignore
-                const arrayBuffer = event.target.result as ArrayBuffer;
-                const imageInfo = findInfoFromBinary(arrayBuffer);
-                resolve(Object.assign(img, imageInfo));
-            });
+}
+
+function readBlob(blob:Blob|File) : Promise<ImageInfo> {
+    return new Promise<ImageInfo>((resolve) => {
+        const reader = new FileReader();
+        reader.readAsArrayBuffer(blob);
+        reader.addEventListener('load', (event)=> {
+            // @ts-ignore
+            const arrayBuffer = event.target.result as ArrayBuffer;
+            const imageInfo = findInfoFromBinary(arrayBuffer);
+            resolve(imageInfo);
         });
-    }
-    function findInfoFromBinary(binFile:ArrayBuffer):ImageInfo {
-        const result:ImageInfo = {
-            exifdata: undefined,
-            iptcdata: undefined,
-            xmpdata: undefined
-        };
-        const data = findEXIFinJPEG(binFile);
-        result.exifdata = (data || {}) as LiteralMap;
-        const iptcdata = findIPTCinJPEG(binFile);
-        result.iptcdata = (iptcdata || {}) as LiteralMap;
-        if (EXIF.isXmpEnabled) {
-            const xmpdata= findXMPinJPEG(binFile);
-            result.xmpdata = xmpdata || {};
-        }
-        return result;
-    }
+    });
 }
 
 
+function findInfoFromBinary(binFile:ArrayBuffer):ImageInfo {
+    const result:ImageInfo = {
+        exifdata: undefined,
+        iptcdata: undefined,
+        xmpdata: undefined
+    };
+    const data = findEXIFinJPEG(binFile);
+    result.exifdata = (data || {}) as LiteralMap;
+    const iptcdata = findIPTCinJPEG(binFile);
+    result.iptcdata = (iptcdata || {}) as LiteralMap;
+    if (EXIF.isXmpEnabled) {
+        const xmpdata= findXMPinJPEG(binFile);
+        result.xmpdata = xmpdata || {};
+    }
+    return result;
+}
+
 export class EXIF {
-    static isXmpEnabled = true;
+    private static _isXmpEnabled = true;
+
+    static get isXmpEnabled() {
+        return EXIF._isXmpEnabled;
+    }
 
     /**
      * enable XMP data
      * */
     static enableEmp = () => {
-        EXIF.isXmpEnabled = true;
+        EXIF._isXmpEnabled = true;
     }
 
     /**
@@ -154,7 +159,7 @@ export class EXIF {
         const data = img.exifdata || {};
         let strPretty = "";
         for(const [key, value] of Object.entries(data)) {
-            if(typeof  value === "object") {
+            if(typeof value === "object") {
                 if (value instanceof Number) {
                     const val = value as Fraction
                     strPretty += `${key} : ${value} [${val.numerator}/${val.denominator}]\r\n`;
