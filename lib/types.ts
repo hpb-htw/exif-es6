@@ -26,14 +26,3 @@ export interface ImageInfo {
     iptcdata?:LiteralMap,
     xmpdata?:LiteralMap|string
 }
-
-export interface ImageEl {
-    src:any
-}
-
-/**
- * merge Image and ImageInfo.
- * */
-export interface ImageData extends ImageInfo, ImageEl{
-
-}

@@ -1,9 +1,6 @@
 import {findEXIFinJPEG, findIPTCinJPEG, findXMPinJPEG} from "./byte-seeker.js";
-import type {ImageData, ImageInfo, Fraction, LiteralMap} from "./types.js";
+import type {ImageInfo, Fraction, LiteralMap} from "./types.js";
 
-function imageHasData(img:ImageData):boolean {
-    return !!(img.exifdata);
-}
 
 function base64ToArrayBuffer(base64:string, contentType:string=''):ArrayBuffer {
     base64 = base64.replace(/^data\:([^\;]+)\;base64,/gmi, '');
@@ -30,23 +27,22 @@ export async function fetchURLToBlob(url:string):Promise<Blob> {
 /**
  * export for testing only
  * */
-export async function fetchImageData(img:ImageData):Promise<ImageInfo> {
+export async function fetchImageData(img:HTMLImageElement|Blob|File):Promise<ImageInfo> {
+    // @ts-ignore
     if(img.src) {
+        img = img as HTMLImageElement;
         if (/^data:/i.test(img.src)) { // Data URI
             const arrayBuffer = base64ToArrayBuffer(img.src);
-            const imageInfo = findInfoFromBinary(arrayBuffer);
-            return Promise.resolve(Object.assign(img, imageInfo));
+            return findInfoFromBinary(arrayBuffer);
         } else if (/^blob:/i.test(img.src)) { // Object URL
             const blob = await fetchURLToBlob(img.src);
-            const imgInfo = await readBlob(blob);
-            return Promise.resolve(Object.assign(img, imgInfo));
+            return readBlob(blob);
         } else { // common HTTP(S)
             const response = await fetch(img.src, {
                 method: 'GET'
             });
             const blob = await response.blob();
-            const imgInfo = await readBlob(blob);
-            return Promise.resolve(Object.assign(img, imgInfo));
+            return readBlob(blob);
         }
     } else if(img instanceof Blob || img instanceof File) {
         const imgInfo = await readBlob(img);
@@ -111,16 +107,12 @@ export class EXIF {
      *
      * @return a Promise which is resolved to the same image as argument. The image now has an attribute `exifdata`.
      * */
-    static getData = async (img: ImageData): Promise<ImageInfo> => {
-        if(!imageHasData(img)) {
-            return fetchImageData(img);
-        } else {
-            return img;
-        }
+    static getData = async (img: HTMLImageElement): Promise<ImageInfo> => {
+        return fetchImageData(img);
     };
 
     /**
-     * get value of an Exif-tag, if it exists.
+     * get value of an Exif-tag, if the image exists.
      * {@see EXIF.showExifTags()} returns the list of valid Exif tags
      *
      * @param img the Image, which is used as argument in {@see EXIF.getData} before.
@@ -128,18 +120,15 @@ export class EXIF {
      *
      * @return the value of the Exif-tag, or undefined if the tag does not exist.
      * */
-    static getTag = (img:ImageData, tag:string): any => {
-        if (!imageHasData(img)) return;
+    static getTag = (img:ImageInfo, tag:string): any => {
         return img?.exifdata?.[tag];
     }
 
-    static getIptcTag =(img:ImageData, tag:string): any => {
-        if (!imageHasData(img)) return;
+    static getIptcTag =(img:ImageInfo, tag:string): any => {
         return img?.iptcdata?.[tag];
     }
 
-    static getAllTags = (img: ImageData):any => {
-        if (!imageHasData(img)) return {};
+    static getAllTags = (img: ImageInfo):any => {
         const data = img.exifdata || {},
             tags:LiteralMap = {};
         for(let [key, value] of Object.entries(data)) {
@@ -154,8 +143,7 @@ export class EXIF {
      * @param img
      * @return string
     * */
-    static pretty = (img:ImageData):string => {
-        if (!imageHasData(img)) return "";
+    static pretty = (img:ImageInfo):string => {
         const data = img.exifdata || {};
         let strPretty = "";
         for(const [key, value] of Object.entries(data)) {

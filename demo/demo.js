@@ -27,16 +27,15 @@ function initTestUploadFile() {
 async function testNormalImageElement() {
     const img = document.getElementById("demo1");
     const imageInfo = await EXIF.getData(img);
-    console.log('testNormalImageElement', EXIF.getAllTags(img));
-    const pretty = EXIF.pretty(img);
-    document.getElementById("demo1-exif").textContent = pretty;
+    console.log('testNormalImageElement', EXIF.getAllTags(imageInfo));
+    document.getElementById("demo1-exif").textContent = EXIF.pretty(imageInfo);
 }
 
 async function testBase64Image() {
     const img = document.getElementById("demo2");
     const imageInfo = await EXIF.getData(img);
-    console.log('testBase64Image', EXIF.getAllTags(img));
-    document.getElementById("demo2-exif").textContent = EXIF.pretty(img);
+    console.log('testBase64Image', EXIF.getAllTags(imageInfo));
+    document.getElementById("demo2-exif").textContent = EXIF.pretty(imageInfo);
 }
 
 async function testObjectUrl() {
@@ -48,9 +47,9 @@ async function testObjectUrl() {
     const testImage = new Image();
     testImage.src = objectUrl;
     testImage.addEventListener("load", async () => {
-        await EXIF.getData(testImage);
-        console.log("testObjectUrl", EXIF.getAllTags(testImage) );
-        document.getElementById("demo3-exif").textContent = EXIF.pretty(testImage);
+        const imageInfo = await EXIF.getData(testImage);
+        console.log("testObjectUrl", EXIF.getAllTags(imageInfo) );
+        document.getElementById("demo3-exif").textContent = EXIF.pretty(imageInfo);
     });
 }
 
