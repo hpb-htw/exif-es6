@@ -415,9 +415,9 @@ const IptcFieldMap = {
     0x74 : 'copyright',
     0x0F : 'category'
 };
-function readIPTCData(file:ArrayBuffer, startOffset:number, sectionLength:number) : Object{
+function readIPTCData(file:ArrayBuffer, startOffset:number, sectionLength:number) : LiteralMap{
     const dataView = new DataView(file);
-    const data = {};
+    const data:LiteralMap = {};
     //var fieldValue, fieldName, dataSize, segmentType, segmentSize;
     let segmentStartPos = startOffset;
     while(segmentStartPos < startOffset+sectionLength) {
@@ -426,6 +426,7 @@ function readIPTCData(file:ArrayBuffer, startOffset:number, sectionLength:number
             if(segmentType in IptcFieldMap) {
                 const dataSize = dataView.getInt16(segmentStartPos+3);
                 const segmentSize = dataSize + 5;
+                // @ts-ignore
                 const fieldName = IptcFieldMap[segmentType];
                 const fieldValue = getStringFromDB(dataView, segmentStartPos+5, dataSize);
                 // Check if we already stored a value with this name
@@ -450,16 +451,19 @@ function readIPTCData(file:ArrayBuffer, startOffset:number, sectionLength:number
 }
 
 
+/**
+ * TODO: the parameter strings is a map of number to string. Declare a new type of these Map
+ * */
+function readTags(file:DataView, tiffStart:number, dirStart:number, strings:Array<string>, bigEnd:boolean): LiteralMap {
+    const entries = file.getUint16(dirStart, !bigEnd),
+        tags:LiteralMap = {}
+    //    entryOffset, tag,
+    //    i
+    ;
 
-function readTags(file:DataView, tiffStart:number, dirStart:number, strings:Array<string>|Object, bigEnd:boolean): LiteralMap {
-    var entries = file.getUint16(dirStart, !bigEnd),
-        tags:LiteralMap = {},
-        entryOffset, tag,
-        i;
-
-    for (i=0;i<entries;i++) {
-        entryOffset = dirStart + i*12 + 2;
-        tag = strings[file.getUint16(entryOffset, !bigEnd)];
+    for (let i=0; i<entries; i++) {
+        const entryOffset = dirStart + i*12 + 2;
+        const tag = strings[file.getUint16(entryOffset, !bigEnd)];
         if (!tag && debug) console.log("Unknown tag: " + file.getUint16(entryOffset, !bigEnd));
         tags[tag] = readTagValue(file, entryOffset, tiffStart, dirStart, bigEnd);
     }
@@ -564,7 +568,7 @@ function readTagValue(file:DataView, entryOffset:number, tiffStart:number, dirSt
  * Given an IFD (Image File Directory) start offset
  * returns an offset to next IFD or 0 if it's the last IFD.
  */
-function getNextIFDOffset(dataView, dirStart, bigEnd){
+function getNextIFDOffset(dataView:DataView, dirStart:number, bigEnd:boolean){
     //the first 2bytes means the number of directory entries contains in this IFD
     var entries = dataView.getUint16(dirStart, !bigEnd);
 
@@ -575,9 +579,14 @@ function getNextIFDOffset(dataView, dirStart, bigEnd){
     return dataView.getUint32(dirStart + 2 + entries * 12, !bigEnd); // each entry is 12 bytes long
 }
 
-function readThumbnailImage(dataView, tiffStart, firstIFDOffset, bigEnd){
+function readThumbnailImage(dataView:DataView, tiffStart:number, firstIFDOffset:number, bigEnd:boolean):LiteralMap {
+    try{
+        throw new Error("readThumbnailImage called")
+    }catch (e) {
+        console.error(e);
+    }
     // get the IFD1 offset
-    var IFD1OffsetPointer = getNextIFDOffset(dataView, tiffStart+firstIFDOffset, bigEnd);
+    const IFD1OffsetPointer = getNextIFDOffset(dataView, tiffStart+firstIFDOffset, bigEnd);
 
     if (!IFD1OffsetPointer) {
         // console.log('******** IFD1Offset is empty, image thumb not found ********');
@@ -589,7 +598,7 @@ function readThumbnailImage(dataView, tiffStart, firstIFDOffset, bigEnd){
     }
     // console.log('*******  thumbnail IFD offset (IFD1) is: %s', IFD1OffsetPointer);
 
-    var thumbTags = readTags(dataView, tiffStart, tiffStart + IFD1OffsetPointer, IFD1Tags, bigEnd)
+    const thumbTags = readTags(dataView, tiffStart, tiffStart + IFD1OffsetPointer, IFD1Tags, bigEnd)
 
     // EXIF 2.3 specification for JPEG format thumbnail
 
@@ -607,8 +616,8 @@ function readThumbnailImage(dataView, tiffStart, firstIFDOffset, bigEnd){
                 // console.log('Thumbnail image format is JPEG');
                 if (thumbTags.JpegIFOffset && thumbTags.JpegIFByteCount) {
                     // extract the thumbnail
-                    var tOffset = tiffStart + thumbTags.JpegIFOffset;
-                    var tLength = thumbTags.JpegIFByteCount;
+                    const tOffset = tiffStart + thumbTags.JpegIFOffset;
+                    const tLength = thumbTags.JpegIFByteCount;
                     thumbTags['blob'] = new Blob([new Uint8Array(dataView.buffer, tOffset, tLength)], {
                         type: 'image/jpeg'
                     });
@@ -628,7 +637,7 @@ function readThumbnailImage(dataView, tiffStart, firstIFDOffset, bigEnd){
     return thumbTags;
 }
 
-function getStringFromDB(buffer, start, length) {
+function getStringFromDB(buffer:DataView, start:number, length:number) {
     var outstr = "";
     for (var n = start; n < start+length; n++) {
         outstr += String.fromCharCode(buffer.getUint8(n));
@@ -636,42 +645,43 @@ function getStringFromDB(buffer, start, length) {
     return outstr;
 }
 
-function readEXIFData(file, start:number, end:number) {
-    try{
-        throw new Error("readEXIFData called")
-    }catch (e) {
-        console.error(e);
-    }
+/**
+ * TODO: remove return bool and throw all Invalid argument
+ * TODO: remove unused parameter
+ * */
+function readEXIFData(file:DataView, start:number, end:number):LiteralMap {
+
     if (getStringFromDB(file, start, 4) != "Exif") {
         if (debug) console.log("Not valid EXIF data! " + getStringFromDB(file, start, 4));
+        // @ts-ignore
         return false;
     }
 
-    var bigEnd,
-//         tag,
-//        exifData,
-//        gpsData,
-        tiffOffset = start + 6;
+    const tiffOffset = start + 6;
 
     // test for TIFF validity and endianness
+    let bigEnd = true;
     if (file.getUint16(tiffOffset) == 0x4949) {
         bigEnd = false;
     } else if (file.getUint16(tiffOffset) == 0x4D4D) {
         bigEnd = true;
     } else {
         if (debug) console.log("Not valid TIFF data! (no 0x4949 or 0x4D4D)");
+        // @ts-ignore
         return false;
     }
 
     if (file.getUint16(tiffOffset+2, !bigEnd) != 0x002A) {
         if (debug) console.log("Not valid TIFF data! (no 0x002A)");
+        // @ts-ignore
         return false;
     }
 
-    var firstIFDOffset = file.getUint32(tiffOffset+4, !bigEnd);
+    const firstIFDOffset = file.getUint32(tiffOffset+4, !bigEnd);
 
     if (firstIFDOffset < 0x00000008) {
         if (debug) console.log("Not valid TIFF data! (First offset less than 8)", file.getUint32(tiffOffset+4, !bigEnd));
+        // @ts-ignore
         return false;
     }
 
@@ -696,6 +706,7 @@ function readEXIFData(file, start:number, end:number) {
                 case "Sharpness" :
                 case "SubjectDistanceRange" :
                 case "FileSource" :
+                    // @ts-ignore
                     exifData[tag] = StringValues[tag][exifData[tag]];
                     break;
 
@@ -704,19 +715,13 @@ function readEXIFData(file, start:number, end:number) {
                     exifData[tag] = String.fromCharCode(exifData[tag][0], exifData[tag][1], exifData[tag][2], exifData[tag][3]);
                     break;
 
-                case "ComponentsConfiguration" : {
-                    /*exifData[tag] =
-                        StringValues.Components[exifData[tag][0]] +
-                        StringValues.Components[exifData[tag][1]] +
-                        StringValues.Components[exifData[tag][2]] +
-                        StringValues.Components[exifData[tag][3]];
-                     */
-                    console.log(tag, typeof tag);
+                case "ComponentsConfiguration" :
                     exifData[tag] = Array.from({length: 4})
+                        // @ts-ignore
                         .map((_, idx) => `${StringValues.Components[exifData[tag][idx]]}`)
-                        .join();
+                        .join('');
+                    console.log(exifData[tag]);
                     break;
-                }
             }
             tags[tag] = exifData[tag];
         }
