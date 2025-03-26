@@ -704,17 +704,19 @@ function readEXIFData(file, start:number, end:number) {
                     exifData[tag] = String.fromCharCode(exifData[tag][0], exifData[tag][1], exifData[tag][2], exifData[tag][3]);
                     break;
 
-                case "ComponentsConfiguration" :
+                case "ComponentsConfiguration" : {
                     /*exifData[tag] =
                         StringValues.Components[exifData[tag][0]] +
                         StringValues.Components[exifData[tag][1]] +
                         StringValues.Components[exifData[tag][2]] +
                         StringValues.Components[exifData[tag][3]];
                      */
-                    exifData[tag] = Array.from({length:4})
-                        .map((_, idx) => `${StringValues.Components[exifData[tag][idx]]}` )
-                        .join()
+                    console.log(tag, typeof tag);
+                    exifData[tag] = Array.from({length: 4})
+                        .map((_, idx) => `${StringValues.Components[exifData[tag][idx]]}`)
+                        .join();
                     break;
+                }
             }
             tags[tag] = exifData[tag];
         }
