@@ -9,5 +9,6 @@
         "declarationMap": true,
         "rootDir": "./lib",
         "outDir": "dist"
-    }
+    },
+    "include": ["lib/*.ts"]
 }

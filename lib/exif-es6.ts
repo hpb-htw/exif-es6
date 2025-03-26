@@ -1,25 +1,12 @@
 import {findEXIFinJPEG, findIPTCinJPEG, findXMPinJPEG} from "./byte-seeker.js";
-
-interface ImageInfo {
-    exifdata:Object,
-    iptcdata:Object,
-    xmpdata:Object
-}
-
-interface ImageEl {
-    src:any
-}
-
-interface ImageData extends ImageInfo, ImageEl{
-
-}
+import type {ImageData, ImageInfo, Fraction, LiteralMap} from "./types.js";
 
 function imageHasData(img:ImageData):boolean {
     return !!(img.exifdata);
 }
 
-function base64ToArrayBuffer(base64:string, contentType:string=undefined):ArrayBuffer {
-    contentType = contentType || base64.match(/^data\:([^\;]+)\;base64,/mi)[1] || ''; // e.g. 'data:image/jpeg;base64,...' => 'image/jpeg'
+function base64ToArrayBuffer(base64:string, contentType:string=''):ArrayBuffer {
+    //contentType = contentType || base64.match(/^data\:([^\;]+)\;base64,/mi)[1] || ''; // e.g. 'data:image/jpeg;base64,...' => 'image/jpeg'
     base64 = base64.replace(/^data\:([^\;]+)\;base64,/gmi, '');
     const binary = atob(base64);
     const len = binary.length;
@@ -65,12 +52,15 @@ export async function fetchImageData(img:ImageData):Promise<ImageInfo> {
         }
     } else if(img instanceof Blob || img instanceof File) {
         return readBlob(img);
+    } else {
+        throw new TypeError(`Argument ${img} is not an image.`);
     }
     function readBlob(blob:Blob|File) : Promise<ImageInfo> {
         return new Promise<ImageInfo>((resolve) => {
             const reader = new FileReader();
             reader.readAsArrayBuffer(blob);
             reader.addEventListener('load', (event)=> {
+                // @ts-ignore
                 const arrayBuffer = event.target.result as ArrayBuffer;
                 const imageInfo = findInfoFromBinary(arrayBuffer);
                 resolve(Object.assign(img, imageInfo));
@@ -78,18 +68,18 @@ export async function fetchImageData(img:ImageData):Promise<ImageInfo> {
         });
     }
     function findInfoFromBinary(binFile:ArrayBuffer):ImageInfo {
-        const result = {
+        const result:ImageInfo = {
             exifdata: undefined,
             iptcdata: undefined,
             xmpdata: undefined
         };
         const data = findEXIFinJPEG(binFile);
-        result['exifdata'] = data || {};
+        result.exifdata = data || {};
         const iptcdata = findIPTCinJPEG(binFile);
-        result['iptcdata'] = iptcdata || {};
+        result.iptcdata = iptcdata || {};
         if (EXIF.isXmpEnabled) {
             const xmpdata= findXMPinJPEG(binFile);
-            result['xmpdata'] = xmpdata || {};
+            result.xmpdata = xmpdata || {};
         }
         return result;
     }
@@ -109,23 +99,20 @@ export class EXIF {
 
     static getTag = (img:ImageData, tag:string): any => {
         if (!imageHasData(img)) return;
-        return img.exifdata[tag];
+        return img?.exifdata?.[tag];
     }
 
     static getIptcTag =(img:ImageData, tag:string): any => {
         if (!imageHasData(img)) return;
-        return img.iptcdata[tag];
+        return img?.iptcdata?.[tag];
     }
 
     static getAllTags = (img: ImageData):any => {
         if (!imageHasData(img)) return {};
-        var a,
-            data = img.exifdata,
-            tags = {};
-        for (a in data) {
-            if (data.hasOwnProperty(a)) {
-                tags[a] = data[a];
-            }
+        const data = img.exifdata || {},
+            tags:LiteralMap = {};
+        for(let [key, value] of Object.entries(data)) {
+            tags[key] = value;
         }
         return tags;
     }
@@ -136,18 +123,18 @@ export class EXIF {
     * */
     static pretty = (img:ImageData):string => {
         if (!imageHasData(img)) return "";
-        const data = img.exifdata;
+        const data = img.exifdata || {};
         let strPretty = "";
-        for (let key of Object.keys(data)) {
-            if (typeof data[key] == "object") {
-                // @ts-nocheck
-                if (data[key] instanceof Number) {
-                    strPretty += key + " : " + data[key] + " [" + data[key]['numerator'] + "/" + data[key]['denominator'] + "]\r\n";
+        for(const [key, value] of Object.entries(data)) {
+            if(typeof  value === "object") {
+                if (value instanceof Number) {
+                    const val = value as Fraction
+                    strPretty += `${key} : ${value} [${val.numerator}/${val.denominator}]\r\n`;
                 } else {
-                    strPretty += key + " : [" + data[key].length + " values]\r\n";
+                    strPretty += `${key} : [${value.length} values]\r\n`;
                 }
             } else {
-                strPretty += key + " : " + data[key] + "\r\n";
+                strPretty += `${key} : ${value}\r\n`;
             }
         }
         return strPretty;

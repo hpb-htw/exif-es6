@@ -1,6 +1,8 @@
+import type {LiteralMap} from "./types.js";
+
 const debug = true;
 
-const ExifTags = Object.freeze({
+const ExifTags = {
 
     // version tags
     0x9000 : "ExifVersion",             // EXIF version
@@ -74,9 +76,9 @@ const ExifTags = Object.freeze({
     // other tags
     0xA005 : "InteroperabilityIFDPointer",
     0xA420 : "ImageUniqueID"            // Identifier assigned uniquely to each image
-});
+};
 
-const TiffTags = Object.freeze({
+const TiffTags = {
     0x0100 : "ImageWidth",
     0x0101 : "ImageHeight",
     0x8769 : "ExifIFDPointer",
@@ -110,9 +112,9 @@ const TiffTags = Object.freeze({
     0x0131 : "Software",
     0x013B : "Artist",
     0x8298 : "Copyright"
-});
+};
 
-const GPSTags = Object.freeze({
+const GPSTags = {
     0x0000 : "GPSVersionID",
     0x0001 : "GPSLatitudeRef",
     0x0002 : "GPSLatitude",
@@ -144,10 +146,10 @@ const GPSTags = Object.freeze({
     0x001C : "GPSAreaInformation",
     0x001D : "GPSDateStamp",
     0x001E : "GPSDifferential"
-});
+};
 
 // EXIF 2.3 Spec
-const IFD1Tags = Object.freeze({
+const IFD1Tags = {
     0x0100: "ImageWidth",
     0x0101: "ImageHeight",
     0x0102: "BitsPerSample",
@@ -168,9 +170,9 @@ const IFD1Tags = Object.freeze({
     0x0212: "YCbCrSubSampling",
     0x0213: "YCbCrPositioning",
     0x0214: "ReferenceBlackWhite"
-});
+};
 
-const StringValues = Object.freeze({
+const StringValues = {
     ExposureProgram : {
         0 : "Not defined",
         1 : "Manual",
@@ -306,9 +308,9 @@ const StringValues = Object.freeze({
         5 : "G",
         6 : "B"
     }
-});
+};
 
-export function findEXIFinJPEG(file) {
+export function findEXIFinJPEG(file:ArrayBuffer) {
     var dataView = new DataView(file);
 
     if (debug) console.log("Got file of length " + file.byteLength);
@@ -348,7 +350,7 @@ export function findEXIFinJPEG(file) {
 
 }
 
-export function findIPTCinJPEG(file) {
+export function findIPTCinJPEG(file:ArrayBuffer) {
     var dataView = new DataView(file);
 
     if (debug) console.log("Got file of length " + file.byteLength);
@@ -361,7 +363,7 @@ export function findIPTCinJPEG(file) {
         length = file.byteLength;
 
 
-    var isFieldSegmentStart = function(dataView, offset){
+    var isFieldSegmentStart = function(dataView:DataView, offset:number){
         return (
             dataView.getUint8(offset) === 0x38 &&
             dataView.getUint8(offset+1) === 0x42 &&
@@ -401,7 +403,7 @@ export function findIPTCinJPEG(file) {
     }
 
 }
-var IptcFieldMap = {
+const IptcFieldMap = {
     0x78 : 'caption',
     0x6E : 'credit',
     0x19 : 'keywords',
@@ -413,19 +415,19 @@ var IptcFieldMap = {
     0x74 : 'copyright',
     0x0F : 'category'
 };
-function readIPTCData(file, startOffset, sectionLength){
-    var dataView = new DataView(file);
-    var data = {};
-    var fieldValue, fieldName, dataSize, segmentType, segmentSize;
-    var segmentStartPos = startOffset;
+function readIPTCData(file:ArrayBuffer, startOffset:number, sectionLength:number) : Object{
+    const dataView = new DataView(file);
+    const data = {};
+    //var fieldValue, fieldName, dataSize, segmentType, segmentSize;
+    let segmentStartPos = startOffset;
     while(segmentStartPos < startOffset+sectionLength) {
         if(dataView.getUint8(segmentStartPos) === 0x1C && dataView.getUint8(segmentStartPos+1) === 0x02){
-            segmentType = dataView.getUint8(segmentStartPos+2);
+            const segmentType = dataView.getUint8(segmentStartPos+2);
             if(segmentType in IptcFieldMap) {
-                dataSize = dataView.getInt16(segmentStartPos+3);
-                segmentSize = dataSize + 5;
-                fieldName = IptcFieldMap[segmentType];
-                fieldValue = getStringFromDB(dataView, segmentStartPos+5, dataSize);
+                const dataSize = dataView.getInt16(segmentStartPos+3);
+                const segmentSize = dataSize + 5;
+                const fieldName = IptcFieldMap[segmentType];
+                const fieldValue = getStringFromDB(dataView, segmentStartPos+5, dataSize);
                 // Check if we already stored a value with this name
                 if(data.hasOwnProperty(fieldName)) {
                     // Value already stored with this name, create multivalue field
@@ -449,9 +451,9 @@ function readIPTCData(file, startOffset, sectionLength){
 
 
 
-function readTags(file, tiffStart, dirStart, strings, bigEnd):any {
+function readTags(file:DataView, tiffStart:number, dirStart:number, strings:Array<string>|Object, bigEnd:boolean): LiteralMap {
     var entries = file.getUint16(dirStart, !bigEnd),
-        tags = {},
+        tags:LiteralMap = {},
         entryOffset, tag,
         i;
 
@@ -465,7 +467,7 @@ function readTags(file, tiffStart, dirStart, strings, bigEnd):any {
 }
 
 
-function readTagValue(file, entryOffset, tiffStart, dirStart, bigEnd) {
+function readTagValue(file:DataView, entryOffset:number, tiffStart:number, dirStart:number, bigEnd:boolean) {
     var type = file.getUint16(entryOffset+2, !bigEnd),
         numValues = file.getUint32(entryOffset+4, !bigEnd),
         valueOffset = file.getUint32(entryOffset+8, !bigEnd) + tiffStart,
@@ -477,7 +479,7 @@ function readTagValue(file, entryOffset, tiffStart, dirStart, bigEnd) {
         case 1: // byte, 8-bit unsigned int
         case 7: // undefined, 8-bit byte, value depending on field
             if (numValues == 1) {
-                return file.getUint8(entryOffset + 8, !bigEnd);
+                return file.getUint8(entryOffset + 8/*, !bigEnd*/);
             } else {
                 offset = numValues > 4 ? valueOffset : (entryOffset + 8);
                 vals = [];
@@ -634,15 +636,21 @@ function getStringFromDB(buffer, start, length) {
     return outstr;
 }
 
-function readEXIFData(file, start, end=undefined) {
+function readEXIFData(file, start:number, end:number) {
+    try{
+        throw new Error("readEXIFData called")
+    }catch (e) {
+        console.error(e);
+    }
     if (getStringFromDB(file, start, 4) != "Exif") {
         if (debug) console.log("Not valid EXIF data! " + getStringFromDB(file, start, 4));
         return false;
     }
 
     var bigEnd,
-        tags, tag,
-        exifData, gpsData,
+//         tag,
+//        exifData,
+//        gpsData,
         tiffOffset = start + 6;
 
     // test for TIFF validity and endianness
@@ -667,11 +675,11 @@ function readEXIFData(file, start, end=undefined) {
         return false;
     }
 
-    tags = readTags(file, tiffOffset, tiffOffset + firstIFDOffset, TiffTags, bigEnd);
+    const tags:LiteralMap = readTags(file, tiffOffset, tiffOffset + firstIFDOffset, TiffTags, bigEnd);
 
     if (tags.ExifIFDPointer) {
-        exifData = readTags(file, tiffOffset, tiffOffset + tags.ExifIFDPointer, ExifTags, bigEnd);
-        for (tag in exifData) {
+        const exifData = readTags(file, tiffOffset, tiffOffset + tags.ExifIFDPointer, ExifTags, bigEnd);
+        for (const tag in exifData) {
             switch (tag) {
                 case "LightSource" :
                 case "Flash" :
@@ -697,11 +705,15 @@ function readEXIFData(file, start, end=undefined) {
                     break;
 
                 case "ComponentsConfiguration" :
-                    exifData[tag] =
+                    /*exifData[tag] =
                         StringValues.Components[exifData[tag][0]] +
                         StringValues.Components[exifData[tag][1]] +
                         StringValues.Components[exifData[tag][2]] +
                         StringValues.Components[exifData[tag][3]];
+                     */
+                    exifData[tag] = Array.from({length:4})
+                        .map((_, idx) => `${StringValues.Components[exifData[tag][idx]]}` )
+                        .join()
                     break;
             }
             tags[tag] = exifData[tag];
@@ -709,8 +721,8 @@ function readEXIFData(file, start, end=undefined) {
     }
 
     if (tags.GPSInfoIFDPointer) {
-        gpsData = readTags(file, tiffOffset, tiffOffset + tags.GPSInfoIFDPointer, GPSTags, bigEnd);
-        for (tag in gpsData) {
+        const gpsData = readTags(file, tiffOffset, tiffOffset + tags.GPSInfoIFDPointer, GPSTags, bigEnd);
+        for (const tag in gpsData) {
             switch (tag) {
                 case "GPSVersionID" :
                     gpsData[tag] = gpsData[tag][0] +
@@ -729,13 +741,13 @@ function readEXIFData(file, start, end=undefined) {
     return tags;
 }
 
-export function findXMPinJPEG(file) {
+export function findXMPinJPEG(file:ArrayBuffer) {
 
     if (!('DOMParser' in self)) {
         // console.warn('XML parsing not supported without DOMParser');
         return;
     }
-    var dataView = new DataView(file);
+    const dataView = new DataView(file);
 
     if (debug) console.log("Got file of length " + file.byteLength);
     if ((dataView.getUint8(0) != 0xFF) || (dataView.getUint8(1) != 0xD8)) {
@@ -743,19 +755,18 @@ export function findXMPinJPEG(file) {
         return false; // not a valid jpeg
     }
 
-    var offset = 2,
-        length = file.byteLength,
+    const length = file.byteLength,
         dom = new DOMParser();
-
+    let offset = 2;
     while (offset < (length-4)) {
         if (getStringFromDB(dataView, offset, 4) == "http") {
-            var startOffset = offset - 1;
-            var sectionLength = dataView.getUint16(offset - 2) - 1;
-            var xmpString = getStringFromDB(dataView, startOffset, sectionLength)
-            var xmpEndIndex = xmpString.indexOf('xmpmeta>') + 8;
+            const startOffset = offset - 1;
+            const sectionLength = dataView.getUint16(offset - 2) - 1;
+            let xmpString = getStringFromDB(dataView, startOffset, sectionLength)
+            const xmpEndIndex = xmpString.indexOf('xmpmeta>') + 8;
             xmpString = xmpString.substring( xmpString.indexOf( '<x:xmpmeta' ), xmpEndIndex );
 
-            var indexOfXmp = xmpString.indexOf('x:xmpmeta') + 10
+            const indexOfXmp = xmpString.indexOf('x:xmpmeta') + 10
             //Many custom written programs embed xmp/xml without any namespace. Following are some of them.
             //Without these namespaces, XML is thought to be invalid by parsers
             xmpString = xmpString.slice(0, indexOfXmp)
@@ -772,7 +783,7 @@ export function findXMPinJPEG(file) {
                 + 'xmlns:Iptc4xmpExt="http://iptc.org/std/Iptc4xmpExt/2008-02-29/" '
                 + xmpString.slice(indexOfXmp)
 
-            var domDocument = dom.parseFromString( xmpString, 'text/xml' );
+            const domDocument = dom.parseFromString( xmpString, 'text/xml' );
             return xml2Object(domDocument);
         } else{
             offset++;
@@ -780,15 +791,21 @@ export function findXMPinJPEG(file) {
     }
 }
 
-function xml2json(xml) {
-    var json = {};
+function xml2json(xml:Node):LiteralMap|string|null {
+    /*try{
+        throw new Error("xml2json called");
+    }catch (e) {
+        console.error(e);
+    }*/
 
-    if (xml.nodeType == 1) { // element node
-        if (xml.attributes.length > 0) {
+    const json:LiteralMap = {};
+
+    if (xml.nodeType === 1) { // element node
+        const el = xml as Element;
+        if(el.hasAttributes()) {
             json['@attributes'] = {};
-            for (var j = 0; j < xml.attributes.length; j++) {
-                var attribute = xml.attributes.item(j);
-                json['@attributes'][attribute.nodeName] = attribute.nodeValue;
+            for(const attribute of el.attributes) {
+                json['@attributes'][attribute.name] = attribute.value;
             }
         }
     } else if (xml.nodeType == 3) { // text node
@@ -816,41 +833,43 @@ function xml2json(xml) {
     return json;
 }
 
-function xml2Object(xml) {
+function xml2Object(xml:Document):LiteralMap|string|null {
     try {
-        var obj = {};
         if (xml.children.length > 0) {
-            for (var i = 0; i < xml.children.length; i++) {
-                var item = xml.children.item(i);
-                var attributes = item.attributes;
-                for(var idx in attributes) {
-                    var itemAtt = attributes[idx];
-                    var dataKey = itemAtt.nodeName;
-                    var dataValue = itemAtt.nodeValue;
-
-                    if(dataKey !== undefined) {
-                        obj[dataKey] = dataValue;
+            const obj:LiteralMap = {};
+            for (const item of xml.children) { //(let i = 0; i < xml.children.length; i++) {
+                //const item = xml.children.item(i);
+                if(item.hasAttributes()) {
+                    // @ts-ignore
+                    const attributes = item.attributes;
+                    for (const itemAtt of attributes) {
+                        const dataKey = itemAtt.name;
+                        const dataValue = itemAtt.value;
+                        if ((typeof dataKey !== 'undefined')) {
+                            obj[dataKey] = dataValue;
+                        }
                     }
                 }
-                var nodeName = item.nodeName;
+                // @ts-ignore
+                const nodeName = item.nodeName;
 
-                if (typeof (obj[nodeName]) == "undefined") {
+                if (typeof (obj[nodeName]) === "undefined") {
                     obj[nodeName] = xml2json(item);
                 } else {
-                    if (typeof (obj[nodeName].push) == "undefined") {
-                        var old = obj[nodeName];
-
+                    if (typeof (obj[nodeName].push) === "undefined") {
+                        const old = obj[nodeName];
                         obj[nodeName] = [];
                         obj[nodeName].push(old);
                     }
                     obj[nodeName].push(xml2json(item));
                 }
             }
+            return obj;
         } else {
-            obj = xml.textContent;
+            return xml.textContent;
         }
-        return obj;
     } catch (e) {
-        console.log(e.message);
+        console.error(e);
+        return `${xml} is not a valid xml document`;
     }
 }

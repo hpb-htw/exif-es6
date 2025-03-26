@@ -3,12 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <title>Demo EXIF ES6</title>
+    <style>
+        .footer {
+            height: 15ex;
+        }
+    </style>
 </head>
 <body>
 
 <div>
     <h3>normal image from img-element</h3>
-<img id="demo1" src="Bloated-Hero.jpg" width="400px" alt="">
+    <img id="demo1" src="Bloated-Hero.jpg" width="400px" alt="">
+    <pre id="demo1-exif"></pre>
+</div>
+
+<div>
+    <h3>base64 image</h3>
+    <pre id="demo2-exif"></pre>
+</div>
+
+<div>
+    <h3>objectURL image</h3>
 </div>
 
 <div>
@@ -17,6 +32,9 @@
     <a class="button-like" href="#" id="fileSelect">upload an image</a>
 </div>
 
+<footer>
+    <div class="footer"></div>
+</footer>
 <script src="./demo.js" type="module"></script>
 </body>
 </html>
