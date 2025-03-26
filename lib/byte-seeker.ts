@@ -310,8 +310,8 @@ const StringValues = {
     }
 };
 
-export function findEXIFinJPEG(file:ArrayBuffer) {
-    var dataView = new DataView(file);
+export function findEXIFinJPEG(file:ArrayBuffer): LiteralMap|boolean {
+    const dataView = new DataView(file);
 
     if (debug) console.log("Got file of length " + file.byteLength);
     if ((dataView.getUint8(0) != 0xFF) || (dataView.getUint8(1) != 0xD8)) {
@@ -319,17 +319,15 @@ export function findEXIFinJPEG(file:ArrayBuffer) {
         return false; // not a valid jpeg
     }
 
-    var offset = 2,
-        length = file.byteLength,
-        marker;
-
+    const length = file.byteLength;
+    let offset = 2;
     while (offset < length) {
         if (dataView.getUint8(offset) != 0xFF) {
             if (debug) console.log("Not a valid marker at offset " + offset + ", found: " + dataView.getUint8(offset));
             return false; // not a valid marker, something is wrong
         }
 
-        marker = dataView.getUint8(offset + 1);
+        const marker = dataView.getUint8(offset + 1);
         if (debug) console.log(marker);
 
         // we could implement handling for other markers here,
@@ -351,7 +349,7 @@ export function findEXIFinJPEG(file:ArrayBuffer) {
 }
 
 export function findIPTCinJPEG(file:ArrayBuffer) {
-    var dataView = new DataView(file);
+    const dataView = new DataView(file);
 
     if (debug) console.log("Got file of length " + file.byteLength);
     if ((dataView.getUint8(0) != 0xFF) || (dataView.getUint8(1) != 0xD8)) {
