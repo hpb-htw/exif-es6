@@ -1,53 +1,84 @@
 # Exif-es6
 
-Port the library `exif-js` in EcmaScript 2015
+Port the library [*exif-js*](https://github.com/exif-js/exif-js) in EcmaScript 2020
 
 A JavaScript library for reading [EXIF meta data](https://en.wikipedia.org/wiki/Exchangeable_image_file_format) from image files.
 
 You can use it on images in the browser, either from an image or a file input element. 
 Both EXIF and IPTC metadata are retrieved.
 This package can be used as a ES6 module.
-<s>This package can also be used in AMD or CommonJS environments.</s> (Not sure, if I can implement it)
 
-**Note**: The EXIF standard applies only to `.jpg` and `.tiff` images. EXIF logic in this package is based on the EXIF standard v2.2 ([JEITA CP-3451, included in this repo](/spec/Exif2-2.pdf)).
+
+**Note**: The EXIF standard applies only to `.jpg` and `.tiff` images. 
+EXIF logic in this package is based on the EXIF standard v2.2 ([JEITA CP-3451, included in this repo](/spec/Exif2-2.pdf)).
 
 ## Install
 
 Install `exif-es6` through [NPM](https://www.npmjs.com/#getting-started):
 
-    npm install exif-es --save 
+```shell
+npm install exif-es --save
+```
+ 
 
 Then you can import it in your JavaScript:
 
 ```javascript
-import {EXIF} from './node_modules/exif-es6/lib/exif.js'
+import {EXIF} from './node_modules/exif-es6/dist/exif-es.js'
 ```
 
 ## Usage
 
-Start with calling the `EXIF.getData` function. You pass it an image as a parameter:
-- either an image from a `<img src="image.jpg">`
+### Exif data from an regular <img>-Tag
+
+* JavaScript:
 
 ```javascript
-window.addEventListener("load", async () => {
-    const image = document.getElementById("image.jpeg");
-    const imageTags = await EXIF.getData(image);
-    console.log(imageTags.exifdata);
-    const make = EXIF.getTag(imageTags, "Make");
-    const model = EXIF.getTag(imageTags, "Model");
-    console.log({make, model});
-});
+//TODO
 ```
 
-- OR a user selected image in a `<input type="file" id="user-file">` element on your page.
+* HTML:
+ 
+```html
+<img id="demo1" src="some-image.jpg" />
+<pre id="demo1-exif"></pre>
+```
+
+### Exif data from an <img>-Tag with base64 src
+
+* JavaScript
 
 ```javascript
-const fileInput = document.getElementById("user-file");
-fileInput.addEventListener("change", async function (){
-    if(this.files.length > 0) {
-        const file = this.files[0];
-        const imageData = await EXIF.getData(file);
-    }
-});
+//TODO
 ```
 
+* HTML
+
+```html
+<img id="demo2" src="data:image/jpeg;base64, .... "/>
+<pre id="demo2-exif"></pre>
+```
+
+### Exif data from a Object URL
+
+#### Example 1: Fetch an image over internet
+
+```javascript
+// Todo
+```
+
+
+#### Example 2: Uploaded image from user
+
+* JavaScript
+
+```javascript
+// To be done
+```
+
+* HTML
+
+```html
+<input type="file" id="fileElem" accept="image/*" style="display:none" />
+<a class="button-like" href="#" id="fileSelect">upload an image</a>
+```

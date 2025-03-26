@@ -174,10 +174,12 @@ export class EXIF {
     }
 
     /**
-     * TODO: <s>get document from origin</s> and implement this method.
+     * Low-level function to get Exif and other information directly from an {@see ArrayBuffer}
+     * @param binFile binary data (for example from a file)
+     * @return an object that contains Exif data, IPTC data, and if enabled, also Xpm data.
      * */
-    static readFromBinaryFile = (file:Blob|File):any => {
-        return undefined;
+    static readFromBinaryFile = (binFile:ArrayBuffer): ImageInfo => {
+        return findInfoFromBinary(binFile);
     }
 
     static showExifTags = ():any => {
