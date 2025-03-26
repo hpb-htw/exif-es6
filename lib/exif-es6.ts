@@ -74,9 +74,9 @@ export async function fetchImageData(img:ImageData):Promise<ImageInfo> {
             xmpdata: undefined
         };
         const data = findEXIFinJPEG(binFile);
-        result.exifdata = data || {};
+        result.exifdata = (data || {}) as LiteralMap;
         const iptcdata = findIPTCinJPEG(binFile);
-        result.iptcdata = iptcdata || {};
+        result.iptcdata = (iptcdata || {}) as LiteralMap;
         if (EXIF.isXmpEnabled) {
             const xmpdata= findXMPinJPEG(binFile);
             result.xmpdata = xmpdata || {};

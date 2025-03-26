@@ -310,7 +310,7 @@ const StringValues = {
     }
 };
 
-export function findEXIFinJPEG(file:ArrayBuffer): LiteralMap|boolean {
+export function findEXIFinJPEG(file:ArrayBuffer): LiteralMap|boolean|undefined {
     const dataView = new DataView(file);
 
     if (debug) console.log("Got file of length " + file.byteLength);
@@ -343,12 +343,10 @@ export function findEXIFinJPEG(file:ArrayBuffer): LiteralMap|boolean {
         } else {
             offset += 2 + dataView.getUint16(offset+2);
         }
-
     }
-
 }
 
-export function findIPTCinJPEG(file:ArrayBuffer) {
+export function findIPTCinJPEG(file:ArrayBuffer):LiteralMap|boolean|undefined {
     const dataView = new DataView(file);
 
     if (debug) console.log("Got file of length " + file.byteLength);
@@ -357,11 +355,7 @@ export function findIPTCinJPEG(file:ArrayBuffer) {
         return false; // not a valid jpeg
     }
 
-    var offset = 2,
-        length = file.byteLength;
-
-
-    var isFieldSegmentStart = function(dataView:DataView, offset:number){
+    const isFieldSegmentStart = (dataView:DataView<any>, offset:number) => {
         return (
             dataView.getUint8(offset) === 0x38 &&
             dataView.getUint8(offset+1) === 0x42 &&
@@ -371,13 +365,13 @@ export function findIPTCinJPEG(file:ArrayBuffer) {
             dataView.getUint8(offset+5) === 0x04
         );
     };
-
+    const length = file.byteLength;
+    let offset = 2;
     while (offset < length) {
-
         if ( isFieldSegmentStart(dataView, offset )){
 
             // Get the length of the name header (which is padded to an even number of bytes)
-            var nameHeaderLength = dataView.getUint8(offset+7);
+            let nameHeaderLength = dataView.getUint8(offset+7);
             if(nameHeaderLength % 2 !== 0) nameHeaderLength += 1;
             // Check for pre photoshop 6 format
             if(nameHeaderLength === 0) {
@@ -385,22 +379,19 @@ export function findIPTCinJPEG(file:ArrayBuffer) {
                 nameHeaderLength = 4;
             }
 
-            var startOffset = offset + 8 + nameHeaderLength;
-            var sectionLength = dataView.getUint16(offset + 6 + nameHeaderLength);
+            const startOffset = offset + 8 + nameHeaderLength;
+            const sectionLength = dataView.getUint16(offset + 6 + nameHeaderLength);
 
             return readIPTCData(file, startOffset, sectionLength);
 
-            break;
-
         }
-
-
         // Not the marker, continue searching
         offset++;
-
     }
-
 }
+
+
+
 const IptcFieldMap = {
     0x78 : 'caption',
     0x6E : 'credit',
@@ -423,7 +414,7 @@ function readIPTCData(file:ArrayBuffer, startOffset:number, sectionLength:number
             const segmentType = dataView.getUint8(segmentStartPos+2);
             if(segmentType in IptcFieldMap) {
                 const dataSize = dataView.getInt16(segmentStartPos+3);
-                const segmentSize = dataSize + 5;
+                //const segmentSize = dataSize + 5;
                 // @ts-ignore
                 const fieldName = IptcFieldMap[segmentType];
                 const fieldValue = getStringFromDB(dataView, segmentStartPos+5, dataSize);
@@ -452,7 +443,7 @@ function readIPTCData(file:ArrayBuffer, startOffset:number, sectionLength:number
 /**
  * TODO: the parameter strings is a map of number to string. Declare a new type of these Map
  * */
-function readTags(file:DataView, tiffStart:number, dirStart:number, strings:Array<string>|NumericMap, bigEnd:boolean): LiteralMap {
+function readTags(file:DataView<any>, tiffStart:number, dirStart:number, strings:Array<string>|NumericMap, bigEnd:boolean): LiteralMap {
     const entries = file.getUint16(dirStart, !bigEnd),
         tags:LiteralMap = {};
 
@@ -466,7 +457,7 @@ function readTags(file:DataView, tiffStart:number, dirStart:number, strings:Arra
 }
 
 
-function readTagValue(file:DataView, entryOffset:number, tiffStart:number, dirStart:number, bigEnd:boolean) {
+function readTagValue(file:DataView<any>, entryOffset:number, tiffStart:number, dirStart:number, bigEnd:boolean) {
     const type = file.getUint16(entryOffset+2, !bigEnd)
         ,numValues = file.getUint32(entryOffset+4, !bigEnd)
         ,valueOffset = file.getUint32(entryOffset+8, !bigEnd) + tiffStart;
@@ -560,7 +551,7 @@ function readTagValue(file:DataView, entryOffset:number, tiffStart:number, dirSt
  * Given an IFD (Image File Directory) start offset
  * returns an offset to next IFD or 0 if it's the last IFD.
  */
-function getNextIFDOffset(dataView:DataView, dirStart:number, bigEnd:boolean){
+function getNextIFDOffset(dataView:DataView<any>, dirStart:number, bigEnd:boolean){
     //the first 2bytes means the number of directory entries contains in this IFD
     var entries = dataView.getUint16(dirStart, !bigEnd);
 
@@ -571,7 +562,7 @@ function getNextIFDOffset(dataView:DataView, dirStart:number, bigEnd:boolean){
     return dataView.getUint32(dirStart + 2 + entries * 12, !bigEnd); // each entry is 12 bytes long
 }
 
-function readThumbnailImage(dataView:DataView, tiffStart:number, firstIFDOffset:number, bigEnd:boolean):LiteralMap {
+function readThumbnailImage(dataView:DataView<any>, tiffStart:number, firstIFDOffset:number, bigEnd:boolean):LiteralMap {
 
     // get the IFD1 offset
     const IFD1OffsetPointer = getNextIFDOffset(dataView, tiffStart+firstIFDOffset, bigEnd);
@@ -625,9 +616,9 @@ function readThumbnailImage(dataView:DataView, tiffStart:number, firstIFDOffset:
     return thumbTags;
 }
 
-function getStringFromDB(buffer:DataView, start:number, length:number) {
-    var outstr = "";
-    for (var n = start; n < start+length; n++) {
+function getStringFromDB(buffer:DataView<any>, start:number, length:number) {
+    let outstr = "";
+    for (let n = start; n < start+length; n++) {
         outstr += String.fromCharCode(buffer.getUint8(n));
     }
     return outstr;
@@ -637,7 +628,7 @@ function getStringFromDB(buffer:DataView, start:number, length:number) {
  * TODO: remove return bool and throw all Invalid argument
  * TODO: remove unused parameter
  * */
-function readEXIFData(file:DataView, start:number, end:number):LiteralMap {
+function readEXIFData(file:DataView<any>, start:number, end:number):LiteralMap|boolean {
 
     if (getStringFromDB(file, start, 4) != "Exif") {
         if (debug) console.log("Not valid EXIF data! " + getStringFromDB(file, start, 4));
@@ -787,11 +778,6 @@ export function findXMPinJPEG(file:ArrayBuffer) {
 }
 
 function xml2json(xml:Node):LiteralMap|string|null {
-    /*try{
-        throw new Error("xml2json called");
-    }catch (e) {
-        console.error(e);
-    }*/
 
     const json:LiteralMap = {};
 
@@ -809,14 +795,14 @@ function xml2json(xml:Node):LiteralMap|string|null {
 
     // deal with children
     if (xml.hasChildNodes()) {
-        for(var i = 0; i < xml.childNodes.length; i++) {
-            var child = xml.childNodes.item(i);
-            var nodeName = child.nodeName;
+        for(let i = 0; i < xml.childNodes.length; i++) {
+            const child = xml.childNodes.item(i);
+            const nodeName = child.nodeName;
             if (json[nodeName] == null) {
                 json[nodeName] = xml2json(child);
             } else {
                 if (json[nodeName].push == null) {
-                    var old = json[nodeName];
+                    const old = json[nodeName];
                     json[nodeName] = [];
                     json[nodeName].push(old);
                 }
