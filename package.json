@@ -1,12 +1,14 @@
 {
   "name": "exif-es6",
-  "version": "0.0.1-beta",
+  "version": "0.0.1-beta-3",
   "description": "JavaScript library for reading EXIF image metadata",
   "type": "module",
   "main": "exif-es6.ts",
   "scripts": {
     "build": "npx tsc -p tsconfig.json",
-    "clean": "rm -rfv dist exif-es6*.tgz"
+    "clean": "rm -rfv dist exif-es6*.tgz",
+    "deploy": "cat npmrc.template > .npmrc; npm publish",
+    "post-deploy" : "rm -r .npmrc"
   },
   "files": [
     "dist",
@@ -17,7 +19,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/hpb-htw/exif-es6"
+    "url": "git+https://github.com/hpb-htw/exif-es6.git"
   },
   "keywords": [
     "exif"

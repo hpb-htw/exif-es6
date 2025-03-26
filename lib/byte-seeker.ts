@@ -699,7 +699,6 @@ function readEXIFData(file:DataView<any>, start:number, end:number):LiteralMap|b
                         // @ts-ignore
                         .map((_, idx) => `${StringValues.Components[exifData[tag][idx]]}`)
                         .join('');
-                    console.log(exifData[tag]);
                     break;
             }
             tags[tag] = exifData[tag];
@@ -727,7 +726,7 @@ function readEXIFData(file:DataView<any>, start:number, end:number):LiteralMap|b
     return tags;
 }
 
-export function findXMPinJPEG(file:ArrayBuffer) {
+export function findXMPinJPEG(file:ArrayBuffer):LiteralMap|string|null|false|undefined {
 
     if (!('DOMParser' in self)) {
         // console.warn('XML parsing not supported without DOMParser');
