@@ -8,6 +8,10 @@ export interface LiteralMap<T = any> {
     [key: string]: T;
 }
 
+export interface NumericMap<T = string> {
+    [key: number]: T;
+}
+
 /**
  * cast Number with numerator and denominator to Fraction
  * @see

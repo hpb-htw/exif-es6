@@ -1,4 +1,4 @@
-import type {LiteralMap} from "./types.js";
+import type {Fraction, LiteralMap, NumericMap} from "./types.js";
 
 const debug = true;
 
@@ -454,12 +454,9 @@ function readIPTCData(file:ArrayBuffer, startOffset:number, sectionLength:number
 /**
  * TODO: the parameter strings is a map of number to string. Declare a new type of these Map
  * */
-function readTags(file:DataView, tiffStart:number, dirStart:number, strings:Array<string>, bigEnd:boolean): LiteralMap {
+function readTags(file:DataView, tiffStart:number, dirStart:number, strings:Array<string>|NumericMap, bigEnd:boolean): LiteralMap {
     const entries = file.getUint16(dirStart, !bigEnd),
-        tags:LiteralMap = {}
-    //    entryOffset, tag,
-    //    i
-    ;
+        tags:LiteralMap = {};
 
     for (let i=0; i<entries; i++) {
         const entryOffset = dirStart + i*12 + 2;
@@ -472,12 +469,9 @@ function readTags(file:DataView, tiffStart:number, dirStart:number, strings:Arra
 
 
 function readTagValue(file:DataView, entryOffset:number, tiffStart:number, dirStart:number, bigEnd:boolean) {
-    var type = file.getUint16(entryOffset+2, !bigEnd),
-        numValues = file.getUint32(entryOffset+4, !bigEnd),
-        valueOffset = file.getUint32(entryOffset+8, !bigEnd) + tiffStart,
-        offset,
-        vals, val, n,
-        numerator, denominator;
+    const type = file.getUint16(entryOffset+2, !bigEnd)
+        ,numValues = file.getUint32(entryOffset+4, !bigEnd)
+        ,valueOffset = file.getUint32(entryOffset+8, !bigEnd) + tiffStart;
 
     switch (type) {
         case 1: // byte, 8-bit unsigned int
@@ -485,36 +479,36 @@ function readTagValue(file:DataView, entryOffset:number, tiffStart:number, dirSt
             if (numValues == 1) {
                 return file.getUint8(entryOffset + 8/*, !bigEnd*/);
             } else {
-                offset = numValues > 4 ? valueOffset : (entryOffset + 8);
-                vals = [];
-                for (n=0;n<numValues;n++) {
+                const offset = numValues > 4 ? valueOffset : (entryOffset + 8);
+                const vals = [];
+                for (let n = 0; n < numValues; n++) {
                     vals[n] = file.getUint8(offset + n);
                 }
                 return vals;
             }
 
         case 2: // ascii, 8-bit byte
-            offset = numValues > 4 ? valueOffset : (entryOffset + 8);
+            const offset = numValues > 4 ? valueOffset : (entryOffset + 8);
             return getStringFromDB(file, offset, numValues-1);
 
         case 3: // short, 16 bit int
             if (numValues == 1) {
                 return file.getUint16(entryOffset + 8, !bigEnd);
             } else {
-                offset = numValues > 2 ? valueOffset : (entryOffset + 8);
-                vals = [];
-                for (n=0;n<numValues;n++) {
+                const offset = numValues > 2 ? valueOffset : (entryOffset + 8);
+                const vals = [];
+                for (let n = 0; n<numValues; n++) {
                     vals[n] = file.getUint16(offset + 2*n, !bigEnd);
                 }
                 return vals;
             }
 
         case 4: // long, 32 bit int
-            if (numValues == 1) {
+            if (numValues === 1) {
                 return file.getUint32(entryOffset + 8, !bigEnd);
             } else {
-                vals = [];
-                for (n=0;n<numValues;n++) {
+                const vals = [];
+                for (let n = 0; n < numValues; n++) {
                     vals[n] = file.getUint32(valueOffset + 4*n, !bigEnd);
                 }
                 return vals;
@@ -522,18 +516,18 @@ function readTagValue(file:DataView, entryOffset:number, tiffStart:number, dirSt
 
         case 5:    // rational = two long values, first is numerator, second is denominator
             if (numValues == 1) {
-                numerator = file.getUint32(valueOffset, !bigEnd);
-                denominator = file.getUint32(valueOffset+4, !bigEnd);
-                val = new Number(numerator / denominator);
+                const numerator = file.getUint32(valueOffset, !bigEnd);
+                const denominator = file.getUint32(valueOffset+4, !bigEnd);
+                const val:Fraction = new Number(numerator / denominator) as Fraction;
                 val.numerator = numerator;
                 val.denominator = denominator;
                 return val;
             } else {
-                vals = [];
-                for (n=0;n<numValues;n++) {
-                    numerator = file.getUint32(valueOffset + 8*n, !bigEnd);
-                    denominator = file.getUint32(valueOffset+4 + 8*n, !bigEnd);
-                    vals[n] = new Number(numerator / denominator);
+                const vals = [];
+                for (let n = 0; n<numValues; n++) {
+                    const numerator = file.getUint32(valueOffset + 8*n, !bigEnd);
+                    const denominator = file.getUint32(valueOffset+4 + 8*n, !bigEnd);
+                    vals[n] = new Number(numerator / denominator) as Fraction;
                     vals[n].numerator = numerator;
                     vals[n].denominator = denominator;
                 }
@@ -541,22 +535,22 @@ function readTagValue(file:DataView, entryOffset:number, tiffStart:number, dirSt
             }
 
         case 9: // slong, 32 bit signed int
-            if (numValues == 1) {
+            if (numValues === 1) {
                 return file.getInt32(entryOffset + 8, !bigEnd);
             } else {
-                vals = [];
-                for (n=0;n<numValues;n++) {
+                const vals = [];
+                for (let n=0; n < numValues; n++) {
                     vals[n] = file.getInt32(valueOffset + 4*n, !bigEnd);
                 }
                 return vals;
             }
 
         case 10: // signed rational, two slongs, first is numerator, second is denominator
-            if (numValues == 1) {
+            if (numValues === 1) {
                 return file.getInt32(valueOffset, !bigEnd) / file.getInt32(valueOffset+4, !bigEnd);
             } else {
-                vals = [];
-                for (n=0;n<numValues;n++) {
+                const vals = [];
+                for (let n = 0; n < numValues; n++) {
                     vals[n] = file.getInt32(valueOffset + 8*n, !bigEnd) / file.getInt32(valueOffset+4 + 8*n, !bigEnd);
                 }
                 return vals;
@@ -580,11 +574,7 @@ function getNextIFDOffset(dataView:DataView, dirStart:number, bigEnd:boolean){
 }
 
 function readThumbnailImage(dataView:DataView, tiffStart:number, firstIFDOffset:number, bigEnd:boolean):LiteralMap {
-    try{
-        throw new Error("readThumbnailImage called")
-    }catch (e) {
-        console.error(e);
-    }
+
     // get the IFD1 offset
     const IFD1OffsetPointer = getNextIFDOffset(dataView, tiffStart+firstIFDOffset, bigEnd);
 
