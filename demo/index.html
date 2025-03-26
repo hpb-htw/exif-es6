@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <title>Demo EXIF ES6</title>
     <style>
+        html, body {
+            font-family: sans-serif;
+        }
         .footer {
             height: 15ex;
         }
@@ -11,20 +14,28 @@
 </head>
 <body>
 
-<div>
-    <h3>normal image from img-element</h3>
-    <img id="demo1" src="Bloated-Hero.jpg" width="400px" alt="">
-    <pre id="demo1-exif"></pre>
-</div>
+<section>
+    <h3>Image from img-element</h3>
+    <div>
+        <img id="demo1" src="Bloated-Hero.jpg" width="400px" alt="">
+        <pre id="demo1-exif"></pre>
+    </div>
+</section>
 
-<div>
-    <h3>base64 image</h3>
-    <pre id="demo2-exif"></pre>
-</div>
+<section>
+    <h3>Image from Base64-encoding</h3>
+    <div id="demo3-container">
+        <pre id="demo2-exif"></pre>
+    </div>
+</section>
 
-<div>
-    <h3>objectURL image</h3>
-</div>
+<section>
+    <h3>Image from objectURL</h3>
+    <div>
+        <img id="demo3" src="dsc_09827.jpg"/>
+        <pre id="demo3-exif"></pre>
+    </div>
+</section>
 
 <div>
     <h3>image from user upload (objectURL)</h3>

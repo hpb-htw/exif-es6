@@ -89,6 +89,23 @@ export async function fetchImageData(img:ImageData):Promise<ImageInfo> {
 export class EXIF {
     static isXmpEnabled = true;
 
+    /**
+     * enable XMP data
+     * */
+    static enableEmp = () => {
+        EXIF.isXmpEnabled = true;
+    }
+
+    /**
+     * get Exif-data from an image.
+     * If the image has not been processed yet, it is processed. Exif-data is cached in image itselft for next use.
+     * @param img one of:
+     *      - a regular HTML <img>-Element
+     *      - an image with base64 encoding in src-attribute
+     *      - an image with Object URL data in src-attribute
+     *
+     * @return a Promise which is resolved to the same image as argument. The image now has an attribute `exifdata`.
+     * */
     static getData = async (img: ImageData): Promise<ImageInfo> => {
         if(!imageHasData(img)) {
             return fetchImageData(img);
@@ -97,6 +114,15 @@ export class EXIF {
         }
     };
 
+    /**
+     * get value of an Exif-tag, if it exists.
+     * {@see EXIF.showExifTags()} returns the list of valid Exif tags
+     *
+     * @param img the Image, which is used as argument in {@see EXIF.getData} before.
+     * @param tag a valid Exif tag.
+     *
+     * @return the value of the Exif-tag, or undefined if the tag does not exist.
+     * */
     static getTag = (img:ImageData, tag:string): any => {
         if (!imageHasData(img)) return;
         return img?.exifdata?.[tag];
@@ -118,8 +144,10 @@ export class EXIF {
     }
 
     /**
-     * prettifies ImageData in string
+     * prettifies ImageData in human-readable string
+     *
      * @param img
+     * @return string
     * */
     static pretty = (img:ImageData):string => {
         if (!imageHasData(img)) return "";
@@ -140,7 +168,14 @@ export class EXIF {
         return strPretty;
     }
 
-    static readFromBinaryFile = (file:any):any => {
+    /**
+     * TODO: <s>get document from origin</s> and implement this method.
+     * */
+    static readFromBinaryFile = (file:Blob|File):any => {
         return undefined;
+    }
+
+    static showExifTags = ():any => {
+        throw new Error("Not implemented now");
     }
 }
