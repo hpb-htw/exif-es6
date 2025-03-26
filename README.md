@@ -82,3 +82,25 @@ import {EXIF} from './node_modules/exif-es6/dist/exif-es.js'
 <input type="file" id="fileElem" accept="image/*" style="display:none" />
 <a class="button-like" href="#" id="fileSelect">upload an image</a>
 ```
+
+### Caching
+
+
+This library does not cache metadata (Exif, IPTC, if applicable Xmp) into the Image Element,
+as [exif-js](https://github.com/exif-js/exif-js) does.
+
+If you need to cache the result, just do it in your code. One way to do it:
+
+```javascript
+const img = document.getElementById("image");
+const imgInfo = await EXIF.getData(img);
+Object.assign(img, imgInfo); 
+```
+
+Now your img object has also three properties:
+
+* `img.exifdata`
+* `img.iptcdata`
+* `img.xmpdata`
+
+

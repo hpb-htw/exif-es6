@@ -32,11 +32,11 @@ export async function fetchURLToBlob(url:string):Promise<Blob> {
  * */
 export async function fetchImageData(img:ImageData):Promise<ImageInfo> {
     if(img.src) {
-        if (/^data\:/i.test(img.src)) { // Data URI
+        if (/^data:/i.test(img.src)) { // Data URI
             const arrayBuffer = base64ToArrayBuffer(img.src);
             const imageInfo = findInfoFromBinary(arrayBuffer);
             return Promise.resolve(Object.assign(img, imageInfo));
-        } else if (/^blob\:/i.test(img.src)) { // Object URL
+        } else if (/^blob:/i.test(img.src)) { // Object URL
             const blob = await fetchURLToBlob(img.src);
             const imgInfo = await readBlob(blob);
             return Promise.resolve(Object.assign(img, imgInfo));
