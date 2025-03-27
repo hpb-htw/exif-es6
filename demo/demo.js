@@ -18,8 +18,10 @@ function initTestUploadFile() {
         const files = event.target.files;
         if(files.length === 1) {
             const img = createImgElement(files[0]);
-            const imageInfo = await fetchImageData(img);
+            const imageInfo = await EXIF.getData(img);
             console.log(EXIF.getAllTags(imageInfo));
+            document.getElementById('demo4-container').prepend(img);
+            document.getElementById('demo4-exif').textContent = EXIF.pretty(imageInfo)
         }
     });
 }
@@ -39,18 +41,17 @@ async function testBase64Image() {
 }
 
 async function testObjectUrl() {
-    const image = document.getElementById("demo3");
-    const src = image.src;
+    const src = 'dsc_09827.jpg';
     const response = await fetch(src, {method: "GET"});
     const blob = await response.blob();
     const objectUrl = URL.createObjectURL(blob);
     const testImage = new Image();
     testImage.src = objectUrl;
-    testImage.addEventListener("load", async () => {
-        const imageInfo = await EXIF.getData(testImage);
-        console.log("testObjectUrl", EXIF.getAllTags(imageInfo) );
-        document.getElementById("demo3-exif").textContent = EXIF.pretty(imageInfo);
-    });
+    const imageInfo = await EXIF.getData(testImage);
+    console.log("testObjectUrl", EXIF.getAllTags(imageInfo) );
+    document.getElementById("demo3-container").prepend(testImage);
+    document.getElementById("demo3-exif").textContent = EXIF.pretty(imageInfo);
+    URL.revokeObjectURL(objectUrl); // if we don't need objectUrl anymore, we can free memory from it
 }
 
 

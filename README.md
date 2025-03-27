@@ -27,14 +27,32 @@ Then you can import it in your JavaScript:
 import {EXIF} from './node_modules/exif-es6/dist/exif-es6.js'
 ```
 
+If you use TypeScript, you can import TypeScript-module in your own file:
+
+```typescript
+import {EXIF} from "./node_modules/exif-es6/lib/exif-es6.[j,t]s"; // ← 
+// which extension you use, depends on your TypeScript compiler/version etc.
+```
+
+There is no JavaScript Distribution in UMD form. 
+If you need it, you can transpile the TypeScript files by yourself. 
+
 ## Usage
 
-### Exif data from a regular <img>-Tag
+### Exif data from a regular HTML img-Tag
 
 * JavaScript:
 
 ```javascript
-//TODO
+async function testNormalImageElement() {
+    const img = document.getElementById("demo1");
+    const imageInfo = await EXIF.getData(img);
+    console.log('testNormalImageElement', EXIF.getAllTags(imageInfo));
+    document.getElementById("demo1-exif").textContent = EXIF.pretty(imageInfo);
+}
+document.addEventListener('load', () => {
+    testNormalImageElement();
+})
 ```
 
 * HTML:
@@ -44,12 +62,20 @@ import {EXIF} from './node_modules/exif-es6/dist/exif-es6.js'
 <pre id="demo1-exif"></pre>
 ```
 
-### Exif data from an <img>-Tag with base64 src
+### Exif data from a HTML img-Tag with base64 src
 
 * JavaScript
 
 ```javascript
-//TODO
+async function testBase64Image() {
+    const img = document.getElementById("demo2");
+    const imageInfo = await EXIF.getData(img);
+    console.log('testBase64Image', EXIF.getAllTags(imageInfo));
+    document.getElementById("demo2-exif").textContent = EXIF.pretty(imageInfo);
+}
+document.addEventListener('load', () => {
+    testBase64Image();
+})
 ```
 
 * HTML
@@ -64,16 +90,61 @@ import {EXIF} from './node_modules/exif-es6/dist/exif-es6.js'
 #### Example 1: Fetch an image over internet
 
 ```javascript
-// Todo
+async function testObjectUrl() {
+    const src = 'dsc_09827.jpg';
+    const response = await fetch(src, {method: "GET"});
+    const blob = await response.blob();
+    const objectUrl = URL.createObjectURL(blob);
+    const testImage = new Image();
+    testImage.src = objectUrl;
+    const imageInfo = await EXIF.getData(testImage);
+    console.log("testObjectUrl", EXIF.getAllTags(imageInfo) );
+    document.getElementById("demo3-container").prepend(testImage);
+    document.getElementById("demo3-exif").textContent = EXIF.pretty(imageInfo);
+    // if we don't need objectUrl anymore, we can free memory from it
+    URL.revokeObjectURL(objectUrl);
+}
 ```
 
+```html
+<div id="demo3-container">
+    <pre id="demo3-exif"></pre>
+</div>
+```
 
 #### Example 2: Uploaded image from user
 
 * JavaScript
 
 ```javascript
-// To be done
+function initTestUploadFile() {
+    const fileSelect = document.getElementById("fileSelect");
+    const fileElem = document.getElementById("fileElem");
+    fileSelect.addEventListener("click", (e) => {
+            if (fileElem) { fileElem.click(); }
+            e.preventDefault(); // prevent navigating to href-address
+        }
+    );
+    const createImgElement = (file) => {
+        const img = document.createElement("img");
+        img.classList.add("menu-image");
+        img.src = URL.createObjectURL(file);
+        return img;
+    }
+    fileElem.addEventListener("change", async (event) => {
+        const files = event.target.files;
+        if(files.length === 1) {
+            const img = createImgElement(files[0]);
+            const imageInfo = await EXIF.getData(img);
+            console.log(EXIF.getAllTags(imageInfo));
+            document.getElementById('demo4-container').prepend(img);
+            document.getElementById('demo4-exif').textContent = EXIF.pretty(imageInfo)
+        }
+    });
+}
+document.addEventListener('load', () => {
+    initTestUploadFile();
+})
 ```
 
 * HTML
@@ -81,7 +152,15 @@ import {EXIF} from './node_modules/exif-es6/dist/exif-es6.js'
 ```html
 <input type="file" id="fileElem" accept="image/*" style="display:none" />
 <a class="button-like" href="#" id="fileSelect">upload an image</a>
+<div id="demo4-container">
+    <pre id="demo4-exif"></pre>
+</div>
 ```
+
+### Low-level
+
+This library exposes experimentally three functions in module `byte-seeker.ts`.
+See API for their usage.
 
 ## Caching
 
