@@ -48,7 +48,7 @@ export interface NumericMap<T = string> {
 /**
  * cast Number with numerator and denominator to Fraction.
  * This interface will be removed in next version (for internal use only).
- * 
+ *
  * @see
  * */
 export interface Fraction extends Number{

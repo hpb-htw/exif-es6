@@ -6,4 +6,5 @@
 .idea/
 dist/
 www/
+coverage/
 .npmrc

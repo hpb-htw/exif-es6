@@ -5,7 +5,7 @@ A JavaScript library for reading [EXIF meta data](https://en.wikipedia.org/wiki/
 You can use it on images in the browser, either from an image or a file input element. Both EXIF and IPTC metadata are retrieved.
 This package can also be used in AMD or CommonJS environments.
 
-**Note**: The EXIF standard applies only to `.jpg` and `.tiff` images. EXIF logic in this package is based on the EXIF standard v2.2 ([JEITA CP-3451, included in this repo](/spec/Exif2-2.pdf)).
+**Note**: The EXIF standard applies only to `.jpg` and `.tiff` images. EXIF logic in this package is based on the EXIF standard v2.2 ([JEITA CP-3451, included in this repo](/specification/Exif2-2.pdf)).
 
 ## Install
 Install `exif-js` through [NPM](https://www.npmjs.com/#getting-started):

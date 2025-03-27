@@ -727,10 +727,8 @@ function readEXIFData(file:DataView, start:number, end:number):LiteralMap|boolea
 }
 
 export function findXMPinJPEG(file:ArrayBuffer):LiteralMap|string|null|false|undefined {
-
-    if (!('DOMParser' in self)) {
-        // console.warn('XML parsing not supported without DOMParser');
-        return;
+    if(typeof DOMParser === "undefined") {
+        throw new Error('XML parsing not supported without DOMParser');
     }
     const dataView = new DataView(file);
 

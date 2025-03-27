@@ -51,17 +51,10 @@ async function fetchImageData(img:HTMLImageElement|Blob|File):Promise<ImageInfo>
     }
 }
 
-function readBlob(blob:Blob|File) : Promise<ImageInfo> {
-    return new Promise<ImageInfo>((resolve) => {
-        const reader = new FileReader();
-        reader.readAsArrayBuffer(blob);
-        reader.addEventListener('load', (event)=> {
-            // @ts-ignore
-            const arrayBuffer = event.target.result as ArrayBuffer;
-            const imageInfo = findInfoFromBinary(arrayBuffer);
-            resolve(imageInfo);
-        });
-    });
+async function readBlob(blob:Blob|File) : Promise<ImageInfo> {
+    const arrayBuffer = await blob.arrayBuffer();
+    const imageInfo = findInfoFromBinary(arrayBuffer);
+    return Promise.resolve(imageInfo);
 }
 
 

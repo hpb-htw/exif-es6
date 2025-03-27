@@ -10,7 +10,7 @@ This package can be used as a ES6 module.
 
 
 **Note**: The EXIF standard applies only to `.jpg` and `.tiff` images. 
-EXIF logic in this package is based on the EXIF standard v2.2 ([JEITA CP-3451, included in this repo](/spec/Exif2-2.pdf)).
+EXIF logic in this package is based on the EXIF standard v2.2 ([JEITA CP-3451, included in this repo](/specification/Exif2-2.pdf)).
 
 ## Install
 
@@ -30,7 +30,7 @@ import {EXIF} from './node_modules/exif-es6/dist/exif-es6.js'
 If you use TypeScript, you can import TypeScript-module in your own file:
 
 ```typescript
-import {EXIF} from "./node_modules/exif-es6/lib/exif-es6.[j,t]s"; // ← 
+import {EXIF} from "./node_modules/exif-es6/lib/exif-es6.(j|c)s"; // ← 
 // which extension you use, depends on your TypeScript compiler/version etc.
 ```
 
