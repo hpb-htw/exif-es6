@@ -2,8 +2,8 @@ import {findEXIFinJPEG, findIPTCinJPEG, findXMPinJPEG} from "./byte-seeker.js";
 import type {ImageInfo, Fraction, LiteralMap} from "./types.js";
 
 
-function base64ToArrayBuffer(base64:string, contentType:string=''):ArrayBuffer {
-    base64 = base64.replace(/^data\:([^\;]+)\;base64,/gmi, '');
+function base64ToArrayBuffer(base64:string):ArrayBuffer {
+    base64 = base64.replace(/^data:([^;]+);base64,/gmi, '');
     const binary = atob(base64);
     const len = binary.length;
     const buffer = new ArrayBuffer(len);
@@ -29,24 +29,23 @@ export async function fetchURLToBlob(url:string):Promise<Blob> {
  * */
 export async function fetchImageData(img:HTMLImageElement|Blob|File):Promise<ImageInfo> {
     // @ts-ignore
-    if(img.src) {
-        img = img as HTMLImageElement;
-        if (/^data:/i.test(img.src)) { // Data URI
-            const arrayBuffer = base64ToArrayBuffer(img.src);
+    const src = img?.src;
+    if(src) {
+        if (/^data:/i.test(src)) { // Data URI
+            const arrayBuffer = base64ToArrayBuffer(src);
             return findInfoFromBinary(arrayBuffer);
-        } else if (/^blob:/i.test(img.src)) { // Object URL
-            const blob = await fetchURLToBlob(img.src);
+        } else if (/^blob:/i.test(src)) { // Object URL
+            const blob = await fetchURLToBlob(src);
             return readBlob(blob);
         } else { // common HTTP(S)
-            const response = await fetch(img.src, {
+            const response = await fetch(src, {
                 method: 'GET'
             });
             const blob = await response.blob();
             return readBlob(blob);
         }
     } else if(img instanceof Blob || img instanceof File) {
-        const imgInfo = await readBlob(img);
-        return Promise.resolve(Object.assign(img, imgInfo));
+        return await readBlob(img);
     } else {
         throw new TypeError(`Argument ${img} is not an image.`);
     }
