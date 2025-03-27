@@ -106,19 +106,19 @@ export class EXIF {
      * If the image has not been processed yet, it is processed. Exif-data is cached in image itselft for next use.
      * @param img one of:
      *
-     *      - a regular HTML <img>-Element
-     *      - an image with base64 encoding in src-attribute
-     *      - an image with Object URL data in src-attribute
-     *      - a Blob-object
-     *      - a File-object
+     * - a regular HTML <img>-Element
+     * - an image with base64 encoding in src-attribute
+     * - an image with Object URL data in src-attribute
+     * - a Blob-object
+     * - a File-object
      *
      * @return a Promise which is resolved to an object with following properties:
-     * 
-     *      - `exifdata`,
-     *      - `iptcdata`
-     *      - `xmpdata`
+     *
+     * - `exifdata`,
+     * - `iptcdata`
+     * - `xmpdata`
      * */
-    static getData = async (img: HTMLImageElement): Promise<ImageInfo> => {
+    static getData = async (img: HTMLImageElement|Blob|File): Promise<ImageInfo> => {
         return fetchImageData(img);
     };
 
