@@ -105,6 +105,7 @@ export class EXIF {
      * get Exif-data from an image.
      * If the image has not been processed yet, it is processed. Exif-data is cached in image itselft for next use.
      * @param img one of:
+     *
      *      - a regular HTML <img>-Element
      *      - an image with base64 encoding in src-attribute
      *      - an image with Object URL data in src-attribute
@@ -112,6 +113,7 @@ export class EXIF {
      *      - a File-object
      *
      * @return a Promise which is resolved to an object with following properties:
+     * 
      *      - `exifdata`,
      *      - `iptcdata`
      *      - `xmpdata`
