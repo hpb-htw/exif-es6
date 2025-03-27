@@ -17,19 +17,19 @@ EXIF logic in this package is based on the EXIF standard v2.2 ([JEITA CP-3451, i
 Install `exif-es6` through [NPM](https://www.npmjs.com/#getting-started):
 
 ```shell
-npm install exif-es --save
+npm install exif-es6 --save
 ```
  
 
 Then you can import it in your JavaScript:
 
 ```javascript
-import {EXIF} from './node_modules/exif-es6/dist/exif-es.js'
+import {EXIF} from './node_modules/exif-es6/dist/exif-es6.js'
 ```
 
 ## Usage
 
-### Exif data from an regular <img>-Tag
+### Exif data from a regular <img>-Tag
 
 * JavaScript:
 
@@ -59,7 +59,7 @@ import {EXIF} from './node_modules/exif-es6/dist/exif-es.js'
 <pre id="demo2-exif"></pre>
 ```
 
-### Exif data from a Object URL
+### Exif data from an Object URL
 
 #### Example 1: Fetch an image over internet
 
@@ -83,7 +83,7 @@ import {EXIF} from './node_modules/exif-es6/dist/exif-es.js'
 <a class="button-like" href="#" id="fileSelect">upload an image</a>
 ```
 
-### Caching
+## Caching
 
 
 This library does not cache metadata (Exif, IPTC, if applicable Xmp) into the Image Element,

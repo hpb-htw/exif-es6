@@ -6,9 +6,10 @@
   "main": "exif-es6.ts",
   "scripts": {
     "build": "npx tsc -p tsconfig.json",
-    "clean": "rm -rfv dist exif-es6*.tgz",
+    "clean": "rm -rfv dist www exif-es6*.tgz",
+    "doc": "npx typedoc --options typedoc.config.js",
     "deploy": "cat npmrc.template > .npmrc; npm publish",
-    "post-deploy" : "rm -r .npmrc"
+    "post-deploy": "rm -r .npmrc"
   },
   "files": [
     "dist",
@@ -42,6 +43,8 @@
     "example"
   ],
   "devDependencies": {
+    "typedoc": "^0.28.1",
+    "typedoc-plugin-mdn-links": "^5.0.1",
     "typescript": "5.8.2"
   }
 }

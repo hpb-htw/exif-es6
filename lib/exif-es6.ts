@@ -17,7 +17,7 @@ function base64ToArrayBuffer(base64:string):ArrayBuffer {
 /**
  * export for testing only
  * */
-export async function fetchURLToBlob(url:string):Promise<Blob> {
+async function fetchURLToBlob(url:string):Promise<Blob> {
     const response = await fetch(url, {
         method: "GET",
     });
@@ -27,7 +27,7 @@ export async function fetchURLToBlob(url:string):Promise<Blob> {
 /**
  * export for testing only
  * */
-export async function fetchImageData(img:HTMLImageElement|Blob|File):Promise<ImageInfo> {
+async function fetchImageData(img:HTMLImageElement|Blob|File):Promise<ImageInfo> {
     // @ts-ignore
     const src = img?.src;
     if(src) {
@@ -89,6 +89,11 @@ export class EXIF {
         return EXIF._isXmpEnabled;
     }
 
+    private constructor() {
+        //"prevent to use `new EXIF()`"
+        // Nothing to do
+    }
+
     /**
      * enable XMP data
      * */
@@ -103,8 +108,13 @@ export class EXIF {
      *      - a regular HTML <img>-Element
      *      - an image with base64 encoding in src-attribute
      *      - an image with Object URL data in src-attribute
+     *      - a Blob-object
+     *      - a File-object
      *
-     * @return a Promise which is resolved to the same image as argument. The image now has an attribute `exifdata`.
+     * @return a Promise which is resolved to an object with following properties:
+     *      - `exifdata`,
+     *      - `iptcdata`
+     *      - `xmpdata`
      * */
     static getData = async (img: HTMLImageElement): Promise<ImageInfo> => {
         return fetchImageData(img);
@@ -112,9 +122,9 @@ export class EXIF {
 
     /**
      * get value of an Exif-tag, if the image exists.
-     * {@see EXIF.showExifTags()} returns the list of valid Exif tags
+     * {@link EXIF.showExifTags()} returns the list of valid Exif tags
      *
-     * @param img the Image, which is used as argument in {@see EXIF.getData} before.
+     * @param img ImageInfo
      * @param tag a valid Exif tag.
      *
      * @return the value of the Exif-tag, or undefined if the tag does not exist.
@@ -123,11 +133,19 @@ export class EXIF {
         return img?.exifdata?.[tag];
     }
 
+    /**
+     * get value of a IPTC tag
+     * @param img ImageInfo
+     * @param tag a valid IPTC tag
+     * */
     static getIptcTag =(img:ImageInfo, tag:string): any => {
         return img?.iptcdata?.[tag];
     }
 
-    static getAllTags = (img: ImageInfo):any => {
+    /**
+     * TODO: rewrite this method to get other metadata
+     * */
+    static getAllTags = (img: ImageInfo):LiteralMap=> {
         const data = img.exifdata || {},
             tags:LiteralMap = {};
         for(let [key, value] of Object.entries(data)) {
@@ -138,7 +156,7 @@ export class EXIF {
 
     /**
      * prettifies ImageData in human-readable string
-     *
+     * TODO: parse the blob
      * @param img
      * @return string
     * */
@@ -149,7 +167,7 @@ export class EXIF {
             if(typeof value === "object") {
                 if (value instanceof Number) {
                     const val = value as Fraction
-                    strPretty += `${key} : ${value} [${val.numerator}/${val.denominator}]\r\n`;
+                    strPretty += `${key} : ${val} [${val.numerator}/${val.denominator}]\r\n`;
                 } else {
                     strPretty += `${key} : [${value.length} values]\r\n`;
                 }
@@ -161,7 +179,7 @@ export class EXIF {
     }
 
     /**
-     * Low-level function to get Exif and other information directly from an {@see ArrayBuffer}
+     * Low-level function to get Exif and other information directly from an {@link ArrayBuffer}
      * @param binFile binary data (for example from a file)
      * @return an object that contains Exif data, IPTC data, and if enabled, also Xpm data.
      * */
