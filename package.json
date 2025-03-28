@@ -1,6 +1,6 @@
 {
   "name": "exif-es6",
-  "version": "0.0.1-beta-3",
+  "version": "0.0.1",
   "description": "JavaScript library for reading EXIF image metadata",
   "type": "module",
   "main": "exif-es6.ts",
